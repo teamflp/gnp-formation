@@ -15,14 +15,26 @@ class ServicesCrudController extends AbstractCrudController
         return Services::class;
     }
 
-    /*
+
     public function configureFields(string $pageName): iterable
     {
         return [
-            IdField::new('id'),
-            TextField::new('title'),
-            TextEditorField::new('description'),
+            IdField::new('id')->hideOnForm(),
+            TextField::new('titre', 'Titre du service')
+                ->setRequired(false),
+
+            TextField::new('icon', 'Icon du service')
+                ->setRequired(false)
+                ->setHelp('Veuillez vous rendre sur le site fontawesome.com pour choisir une icon et la copier ici. Exemple: fas fa-home'),
+
+            TextField::new('animationWow', 'Animation Wow')
+                ->setRequired(false)
+                ->setHelp('Veuillez vous rendre sur le site wow.js pour choisir une animation et la copier ici. Exemple: fadeInUp'),
+
+            TextEditorField::new('description', 'Description')
+                ->setHelp('Veuillez décrire le service en 150 caractères maximum')
+                ->setRequired(false),
         ];
     }
-    */
+
 }

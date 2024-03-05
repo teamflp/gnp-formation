@@ -1,0 +1,19 @@
+<!-- Service Start -->
+<div class="container-xxl py-5">
+    <div class="container">
+        <div class="row g-4">
+            {% for service in getServices() %}
+                <div class="col-lg-3 col-sm-6 wow fadeInUp" data-wow-delay="{{ service.animationWow }}">
+                    <div class="service-item text-center pt-3">
+                        <div class="p-4">
+                            <i class="{{ service.icon }} fa-3x text-primary mb-4"></i>
+                            <h5 class="mb-3">{{ service.titre }}</h5>
+                            <p>{{ service.description|raw }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<!-- Service End -->
