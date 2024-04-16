@@ -1,9 +1,8 @@
-# Utiliser une image PHP avec FPM (FastCGI Process Manager)
-FROM php:8.2-fpm
+# Choisir l'image de base
+FROM php:8.2-apache
 
-# Installer les dépendances requises pour PHP et les extensions pour Symfony et MySQL
+# Mettre à jour les paquets et installer les dépendances requises
 RUN apt-get update && apt-get install -y \
-    nginx \
     libzip-dev \
     zip \
     unzip \
@@ -21,13 +20,11 @@ RUN apt-get update && apt-get install -y \
     intl \
     bcmath \
     soap \
-    exif
+    exif \
+    && a2enmod rewrite
 
-# Configurer Nginx
-COPY config/nginx/nginx.conf /etc/nginx/nginx.conf
-
-# Nettoyer le cache d'APT
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Activer le mode de réécriture d'Apache
+RUN a2enmod rewrite
 
 # Définir le répertoire de travail
 WORKDIR /var/www/html
@@ -39,8 +36,8 @@ COPY . /var/www/html
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
-# Exposer les ports pour Nginx et PHP-FPM
-EXPOSE 80 9000
+# Exposer le port 80
+EXPOSE 80
 
-# Démarrer Nginx et PHP-FPM
-CMD service nginx start && php-fpm
+# Commande pour démarrer le serveur Apache en mode foreground
+CMD ["apache2-foreground"]
