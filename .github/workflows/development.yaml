@@ -6,11 +6,8 @@ on:
   pull_request:
     branches: [ "development" ]
 
-permissions:
-  contents: read
-
 jobs:
-  symfony-tests:
+  build-and-test:
     runs-on: ubuntu-latest
 
     services:
@@ -26,38 +23,52 @@ jobs:
         options: >-
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=5
+          --health-retries=3
 
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Set up PHP
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up PHP with extensions
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.0'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, zip
-          tools: composer:v2
-          coverage: none
-      
-      - name: Copy .env.test.local
-        run: php -r "file_exists('.env.test.local') || copy('.env.test', '.env.test.local');"
-      
-      - name: Cache Composer packages
-        uses: actions/cache@v3
+          extensions: mbstring, pdo_mysql, xml, ctype, iconv, intl, zip
+          tools: composer
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-scripts
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
         with:
-          path: vendor
-          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-php-
-      
-      - name: Install Dependencies
-        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-      
-      - name: Create Database
+          node-version: '14'
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          tags: teamflp/gnp-formationp:latest
+          push: true
+
+      - name: Run Docker container
         run: |
-          mysql -h 127.0.0.1 -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }} -e "CREATE DATABASE IF NOT EXISTS gnp-formation2024;"
-      
-      - name: Execute tests (Unit and Feature tests) via PHPUnit
-        env:
-          DATABASE_URL: mysql://root:${{ secrets.MYSQL_ROOT_PASSWORD }}@127.0.0.1:3306/gnp-formation2024
-        run: vendor/bin/phpunit
+          docker run --name symfonyagnp-formation -d -p 8000:8000 --network host teamflp/gnp-formation:latest
+
+      - name: Wait for application to be ready
+        run: sleep 10  # Adjust sleep time as necessary
+
+      - name: Run Symfony tests
+        run: |
+          docker exec gnp-formation php bin/phpunit
+
+      - name: Stop and remove Docker container
+        run: |
+          docker stop gnp-formation
+          docker rm gnp-formation
+
+      - name: Remove Docker images
+        run: |
+          docker rmi teamflp/gnp-formation:latest
+
