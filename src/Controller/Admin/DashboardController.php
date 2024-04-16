@@ -5,6 +5,8 @@ namespace App\Controller\Admin;
 use App\Entity\About;
 use App\Entity\AboutCategory;
 use App\Entity\Carousel;
+use App\Entity\Formation;
+use App\Entity\FormationCategory;
 use App\Entity\Services;
 use App\Entity\User;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Assets;
@@ -26,7 +28,7 @@ class DashboardController extends AbstractDashboardController
     #[Route('/admin', name: 'admin')]
     public function index(): Response
     {
-        //return parent::index();
+        // return parent::index();
 
         // Option 1. You can make your dashboard redirect to some common page of your backend
         //
@@ -74,5 +76,10 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::section('Gestion à propos de nous');
         yield MenuItem::linkToCrud('A propos de nous', 'fas fa-info', About::class);
         yield MenuItem::linkToCrud('Catégory', 'fas fa-tag', AboutCategory::class);
+
+        yield MenuItem::section('Gestion des formations');
+        yield MenuItem::linkToCrud('Catégories', 'fas fa-tag', FormationCategory::class);
+        yield MenuItem::linkToCrud('Formations', 'fas fa-training', Formation::class);
+
     }
 }

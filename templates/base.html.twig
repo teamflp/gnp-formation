@@ -31,7 +31,10 @@
 
         {% block javascripts %}
             {% block importmap %}
-                {{ importmap(['app','bootstrap']) }}
+                {{ importmap([
+                    'app',
+                    'bootstrap'
+                ]) }}
             {% endblock %}
         {% endblock %}
     </head>

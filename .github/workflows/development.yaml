@@ -1,0 +1,78 @@
+name: Symfony CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:5.7
+        env:
+          MYSQL_DATABASE: appgnp-formation2024
+          MYSQL_USER: root
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=10s
+          --health-retries=5
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, zip
+        tools: composer:v2
+        coverage: none
+
+    - name: Cache Composer Dependencies
+      uses: actions/cache@v2
+      with:
+        path: vendor
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-interaction
+
+    - name: Check Symfony Requirements
+      run: symfony check:requirements
+
+    - name: Build and start containers using Docker Compose
+      run: docker-compose up -d --build
+
+    - name: Run tests through Docker Compose
+      run: |
+        docker-compose exec web ./vendor/bin/phpunit
+        if [ $? -ne 0 ]; then
+          echo "Tests failed"
+          exit 1
+        fi
+
+    - name: Build and push Docker image
+      if: github.ref == 'refs/heads/main'
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile
+        push: true
+        tags: teamflp/gnp-formation:latest
+        load: true
+
+    - name: Check container health
+      run: docker-compose ps
+
+    - name: Stop and Remove Docker containers
+      run: docker-compose down --volumes

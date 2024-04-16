@@ -54,6 +54,8 @@ symfony console make:auth # Création de l'authentification
 - Services (titre, description, icon)
 - About (titre, sousTitre, description, image)
 - AboutCategory (category)
+- FormationCategory (category)
+- Formation (titre, description, image, category)
 
 ```bash
 symfony console make:entity Nom-de-l-entité # Création d'une entité
@@ -65,4 +67,14 @@ symfony console doctrine:migrations:migrate # Exécution des migrations
 symfony console d:m:m # Forme abrégée de la commande symfony console doctrine:migrations:migrate  
 ```
 
-https://blog.remipetit.fr/comment-deployer-son-application-symfony-sur-lhebergeur-hostinger/
+## Mettre un projet Symfony en ligne : Hostinger
+[Mettre en ligne un projet Symfony sur serveur Hostinger](https://blog.remipetit.fr/comment-deployer-son-application-symfony-sur-lhebergeur-hostinger/)
+
+### Configuration de la base de données dans le fichier .env
+
+```bash
+DATABASE_URL="mysql://username:password@localhost:3306/dbname"
+```
+
+
+
