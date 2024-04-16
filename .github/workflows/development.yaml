@@ -1,13 +1,16 @@
-name: Projet Symfony CI
+name: Symfony CI
 
 on:
   push:
-    branches: [ development ]
+    branches: [ "development" ]
   pull_request:
-    branches: [ development ]
+    branches: [ "development" ]
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  symfony-tests:
     runs-on: ubuntu-latest
 
     services:
@@ -16,72 +19,46 @@ jobs:
         env:
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE: gnp-formation2024
+          MYSQL_USER: root
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
         ports:
           - 3306:3306
         options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }}"
           --health-interval=10s
-          --health-timeout=10s
-          --health-retries=3
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
-          cache: 'npm'
-
+      - uses: actions/checkout@v3
+      
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.0'
           extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, zip
           tools: composer:v2
           coverage: none
-
-      - name: Install Symfony CLI
-        run: |
-          wget https://get.symfony.com/cli/installer -O - | bash
-          echo "$HOME/.symfony/bin" >> $GITHUB_PATH
-
-      - name: Cache Composer Dependencies
-        uses: actions/cache@v2
+      
+      - name: Copy .env.test.local
+        run: php -r "file_exists('.env.test.local') || copy('.env.test', '.env.test.local');"
+      
+      - name: Cache Composer packages
+        uses: actions/cache@v3
         with:
           path: vendor
-          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-          restore-keys: ${{ runner.os }}-composer-
-
-      - name: Install dependencies
-        run: composer install --prefer-dist --no-interaction
-
-      - name: Check Symfony Requirements
-        run: symfony check:requirements
-
-      - name: Build and start containers using Docker Compose
-        run: docker-compose up -d --build
-
-      - name: Run tests through Docker Compose
+          key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-
+      
+      - name: Install Dependencies
+        run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+      
+      - name: Create Database
         run: |
-          docker-compose exec web ./vendor/bin/phpunit
-          if [ $? -ne 0 ]; then
-            echo "Tests failed"
-            exit 1
-          fi
-
-      - name: Build and push Docker image
-        if: github.ref == 'refs/heads/development' 
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: teamflp/gnp-formation:latest
-          load: true
-
-      - name: Check container health
-        run: docker-compose ps
-
-      - name: Stop and Remove Docker containers
-        run: docker-compose down --volumes
+          mysql -h 127.0.0.1 -u root -p${{ secrets.MYSQL_ROOT_PASSWORD }} -e "CREATE DATABASE IF NOT EXISTS gnp-formation2024;"
+      
+      - name: Execute tests (Unit and Feature tests) via PHPUnit
+        env:
+          DATABASE_URL: mysql://root:${{ secrets.MYSQL_ROOT_PASSWORD }}@127.0.0.1:3306/gnp-formation2024
+        run: vendor/bin/phpunit
