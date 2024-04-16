@@ -25,52 +25,64 @@ jobs:
           --health-retries=5
 
     steps:
-    - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-        extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, zip
-        tools: composer:v2
-        coverage: none
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20.12.1'
+          cache: 'npm'
 
-    - name: Cache Composer Dependencies
-      uses: actions/cache@v2
-      with:
-        path: vendor
-        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
-        restore-keys: ${{ runner.os }}-composer-
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, zip
+          tools: composer:v2
+          coverage: none
 
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-interaction
+      - name: Install Symfony CLI
+        run: |
+          wget https://get.symfony.com/cli/installer -O - | bash
+          echo "$HOME/.symfony5/bin" >> $GITHUB_PATH
 
-    - name: Check Symfony Requirements
-      run: symfony check:requirements
+      - name: Cache Composer Dependencies
+        uses: actions/cache@v2
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
 
-    - name: Build and start containers using Docker Compose
-      run: docker-compose up -d --build
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction
 
-    - name: Run tests through Docker Compose
-      run: |
-        docker-compose exec web ./vendor/bin/phpunit
-        if [ $? -ne 0 ]; then
-          echo "Tests failed"
-          exit 1
-        fi
+      - name: Check Symfony Requirements
+        run: symfony check:requirements
 
-    - name: Build and push Docker image
-      if: github.ref == 'refs/heads/main'
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        file: ./Dockerfile
-        push: true
-        tags: teamflp/gnp-formation:latest
-        load: true
+      - name: Build and start containers using Docker Compose
+        run: docker-compose up -d --build
 
-    - name: Check container health
-      run: docker-compose ps
+      - name: Run tests through Docker Compose
+        run: |
+          docker-compose exec web ./vendor/bin/phpunit
+          if [ $? -ne 0 ]; then
+            echo "Tests failed"
+            exit 1
+          fi
 
-    - name: Stop and Remove Docker containers
-      run: docker-compose down --volumes
+      - name: Build and push Docker image
+        if: github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: teamflp/gnp-formation:latest
+          load: true
+
+      - name: Check container health
+        run: docker-compose ps
+
+      - name: Stop and Remove Docker containers
+        run: docker-compose down --volumes
