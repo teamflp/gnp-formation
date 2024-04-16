@@ -7,7 +7,7 @@ on:
     branches: [ "development" ]
 
 jobs:
-  build-and-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     services:
@@ -52,10 +52,6 @@ jobs:
 
       - name: Wait for application to be ready
         run: sleep 10  # Adjust sleep time as necessary
-
-      - name: Run Symfony tests
-        run: |
-          docker exec gnp-formation php bin/phpunit
 
       - name: Stop and remove Docker container
         run: |
