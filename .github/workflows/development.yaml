@@ -1,4 +1,4 @@
-name: Projet Symfony CI - GNP-FORMATION
+name: PROJET SYMFONY CI/CD - GNP-FORMATION
 
 on:
   push:
