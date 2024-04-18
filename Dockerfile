@@ -1,5 +1,5 @@
 # Choisir l'image de base
-FROM php:8.2-apache
+FROM php:8.3.2-apache
 
 # Mettre à jour les paquets et installer les dépendances requises
 RUN apt-get update && apt-get install -y \
