@@ -53,12 +53,6 @@ jobs:
         run: |
           docker run --name gnp-formation -d -p 8000:8000 --network host teamflp/gnp-formation:latest
 
-      - name: Save State
-        run: echo "{name}={value}" >> $GITHUB_STATE
-
-      - name: Set output
-        run: echo "{name}={value}" >> $GITHUB_OUTPUT
-
       - name: Wait for application to be ready
         run: sleep 10  # Adjust sleep time as necessary
 
