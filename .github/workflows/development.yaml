@@ -13,6 +13,7 @@ jobs:
     services:
       mysql:
         image: mysql:5.7
+        command: --explicit_defaults_for_timestamp=1
         env:
           MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
           MYSQL_DATABASE: gnp-formation2024
