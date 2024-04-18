@@ -1,4 +1,4 @@
-name: Symfony CI
+name: Projetc Symfony CI - GNP-Formation
 
 on:
   push:
@@ -26,9 +26,12 @@ jobs:
       - name: Set up PHP with extensions
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.0'
+          php-version: '8.2'
           extensions: mbstring, pdo_mysql, xml, ctype, iconv, intl, zip
           tools: composer
+
+      - name: Update Composer dependencies
+        run: composer update--prefer-dist --no-progress --no-scripts
 
       - name: Install Composer dependencies
         run: composer install --prefer-dist --no-progress --no-scripts

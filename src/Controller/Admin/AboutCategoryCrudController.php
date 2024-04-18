@@ -14,7 +14,6 @@ class AboutCategoryCrudController extends AbstractCrudController
         return AboutCategory::class;
     }
 
-
     public function configureFields(string $pageName): iterable
     {
         return [
