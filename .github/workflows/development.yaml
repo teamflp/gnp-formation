@@ -66,7 +66,7 @@ jobs:
           docker run --name gnp-formation -d -p 8000:8000 --network host teamflp/gnp-formation:latest
 
       - name: Wait for application to be ready
-        run: sleep 10  # Adjust sleep time as necessary
+        run: sleep 10 # On attend 10 secondes pour que le container soit prêt
 
       - name: Stop and remove Docker container
         run: |
