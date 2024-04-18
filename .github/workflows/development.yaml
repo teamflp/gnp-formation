@@ -39,7 +39,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '20'
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -53,11 +53,11 @@ jobs:
         run: |
           docker run --name gnp-formation -d -p 8000:8000 --network host teamflp/gnp-formation:latest
 
-      - name: Set a state for later use
-        run: echo "MY_STATE=some_value" >> $GITHUB_ENV
+      - name: Save State
+        run: echo "{name}={value}" >> $GITHUB_STATE
 
-      - name: Use the state frome environment file
-        run: echo $MY_STATE
+      - name: Set output
+        run: echo "{name}={value}" >> $GITHUB_OUTPUT
 
       - name: Wait for application to be ready
         run: sleep 10  # Adjust sleep time as necessary
