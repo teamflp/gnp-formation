@@ -1,11 +1,6 @@
-name: Projetc Symfony CI - GNP-Formation
+name: Projet Symfony CI - GNP-FORMATION
 
 on:
-  push:
-    branches: [ "development" ]
-  pull_request:
-    branches: [ "development" ]
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -52,6 +47,12 @@ jobs:
       - name: Run Docker container
         run: |
           docker run --name gnp-formation -d -p 8000:8000 --network host teamflp/gnp-formation:latest
+
+      - name: Set a state for later use
+        run: echo "MY_STATE=some_value" >> $GITHUB_ENV
+
+      - name: Use the state from environment file
+        run: echo "The state is $MY_STATE"
 
       - name: Wait for application to be ready
         run: sleep 10  # Adjust sleep time as necessary
